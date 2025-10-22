@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Check, Loader2, ShieldCheck, Sparkles, Video, Play, RefreshCw } from "lucide-react"
+import { Check, Loader2, ShieldCheck, Sparkles, Video, Play, RefreshCw, AlertCircle } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 
 type VerificationStep = "idle" | "creating" | "verifying" | "verified" | "error"
@@ -324,6 +324,35 @@ export function ProfileSettings() {
                 </div>
               </div>
             </div>
+          ) : videoGenStep === "error" ? (
+            // Error State
+            <div className="space-y-4">
+              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-gradient-to-br from-destructive/10 to-destructive/5 border-2 border-destructive/20 flex items-center justify-center">
+                <div className="text-center space-y-6 p-8">
+                  <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                    <AlertCircle className="w-10 h-10 text-destructive" strokeWidth={2} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="font-bold text-xl">Couldn't Generate Video</p>
+                    <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
+                      {videoError || "Something went wrong"}
+                    </p>
+                  </div>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 rounded-xl"
+                    onClick={() => {
+                      setVideoGenStep("idle")
+                      setVideoError(null)
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            </div>
           ) : isGeneratingProfile ? (
             // Generating Profile State
             <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[var(--blush)]/20 to-[var(--rose)]/20 border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
@@ -384,10 +413,6 @@ export function ProfileSettings() {
                     disabled={!profileGenerated}
                   />
                 </div>
-
-                {videoError && (
-                  <p className="text-sm text-destructive">{videoError}</p>
-                )}
 
                 {profileGenerated ? (
                   <div className="space-y-3">

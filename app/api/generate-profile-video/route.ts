@@ -55,10 +55,46 @@ Professional dating profile aesthetic. 5 seconds, 16:9 ratio.`
 
   } catch (error) {
     console.error("Profile video generation error:", error)
+
+    // Parse different error types for user-friendly messages
+    let userMessage = "Something went wrong while creating your video"
+    let errorType = "general"
+
+    if (error instanceof Error) {
+      const errorStr = error.message.toLowerCase()
+
+      // Veo API not available or model not found
+      if (errorStr.includes("not found") || errorStr.includes("404")) {
+        userMessage = "Video generation is temporarily unavailable. This feature is still in preview and may have limited access."
+        errorType = "unavailable"
+      }
+      // Quota/rate limit errors
+      else if (errorStr.includes("quota") || errorStr.includes("rate limit") || errorStr.includes("429")) {
+        userMessage = "We've hit our video generation limit for today. Try again tomorrow!"
+        errorType = "quota"
+      }
+      // API key issues
+      else if (errorStr.includes("api key") || errorStr.includes("unauthorized") || errorStr.includes("401")) {
+        userMessage = "There's a configuration issue. Please contact support."
+        errorType = "auth"
+      }
+      // Content policy violations
+      else if (errorStr.includes("policy") || errorStr.includes("safety")) {
+        userMessage = "Your description couldn't be processed. Try describing yourself differently!"
+        errorType = "policy"
+      }
+      // Timeout errors
+      else if (errorStr.includes("timeout") || errorStr.includes("timed out")) {
+        userMessage = "Video generation took too long. Please try again with a simpler description."
+        errorType = "timeout"
+      }
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to generate profile video"
+        error: userMessage,
+        errorType
       },
       { status: 500 }
     )
