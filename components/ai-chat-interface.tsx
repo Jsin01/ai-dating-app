@@ -12,6 +12,7 @@ import { getUserRAG } from "@/lib/user-profile"
 import { getRandomMatch } from "@/lib/match-profiles"
 import ReactMarkdown from "react-markdown"
 import { DateProposalCard } from "@/components/date-proposal-card"
+import { ExperienceMatchCard } from "@/components/experience-match-card"
 import { coordinateDate } from "@/lib/accommodation-coordination"
 
 export function AIChatInterface() {
@@ -26,6 +27,15 @@ export function AIChatInterface() {
   const [isHydrated, setIsHydrated] = useState(false)
   const [playingGlimpseId, setPlayingGlimpseId] = useState<string | null>(null)
   const [dateProposals, setDateProposals] = useState<DateProposal[]>([])
+  const [experienceMatch, setExperienceMatch] = useState<{
+    experienceName: string
+    experienceVenue?: string
+    experienceLocation?: string
+    matchName: string
+    matchReason: string
+    suggestedDateTime: string
+    messageIndex: number
+  } | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -122,6 +132,89 @@ export function AIChatInterface() {
       }
     }
     loadDateProposals()
+
+    // Check for pending experience match request
+    const checkExperienceMatchRequest = async () => {
+      const pendingRequest = localStorage.getItem('pending_experience_match_request')
+      if (pendingRequest) {
+        try {
+          const experienceData = JSON.parse(pendingRequest)
+          console.log('Found pending experience match request:', experienceData)
+
+          // Clear the flag immediately to prevent duplicate processing
+          localStorage.removeItem('pending_experience_match_request')
+
+          // Show AI typing indicator
+          setIsTyping(true)
+
+          // Add initial message from AI
+          await new Promise(resolve => setTimeout(resolve, 800))
+          setMessages(prev => [...prev, {
+            role: "ai" as const,
+            content: `ooh love that you want to do ${experienceData.experienceName}! let me reach out to the other matchmakers...`,
+            timestamp: new Date(),
+          }])
+
+          // Call the experience match API
+          const response = await fetch('/api/experience-match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(experienceData)
+          })
+
+          const data = await response.json()
+
+          if (data.success && data.match) {
+            // Add AI message with coordination story
+            await new Promise(resolve => setTimeout(resolve, 1200))
+            setMessages(prev => [...prev, {
+              role: "ai" as const,
+              content: data.match.coordinationStory,
+              timestamp: new Date(),
+            }])
+
+            // Add final message with match details
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            let finalMessageIndex = 0
+            setMessages(prev => {
+              finalMessageIndex = prev.length
+              return [...prev, {
+                role: "ai" as const,
+                content: `${data.match.matchName} would be perfect! ${data.match.matchReason}`,
+                timestamp: new Date(),
+              }]
+            })
+
+            // Store experience match data for card rendering
+            setExperienceMatch({
+              experienceName: experienceData.experienceName,
+              experienceVenue: experienceData.experienceVenue,
+              experienceLocation: experienceData.experienceLocation,
+              matchName: data.match.matchName,
+              matchReason: data.match.matchReason,
+              suggestedDateTime: data.match.suggestedDateTime,
+              messageIndex: finalMessageIndex
+            })
+
+            console.log('Experience match found:', data.match)
+          } else {
+            // Fallback if API fails
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            setMessages(prev => [...prev, {
+              role: "ai" as const,
+              content: "hmm having trouble connecting with the other matchmakers right now... wanna try again in a bit?",
+              timestamp: new Date(),
+            }])
+          }
+
+          setIsTyping(false)
+        } catch (error) {
+          console.error('Failed to process experience match request:', error)
+          setIsTyping(false)
+        }
+      }
+    }
+    checkExperienceMatchRequest()
   }, [])
 
   const scrollToBottom = () => {
@@ -825,6 +918,26 @@ export function AIChatInterface() {
                           />
                         )
                       })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Render experience match card right after the message that triggered it */}
+                {experienceMatch && experienceMatch.messageIndex === index && (
+                  <div className="flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-700 mt-4">
+                    <div className="max-w-[92%] w-full">
+                      <ExperienceMatchCard
+                        experienceName={experienceMatch.experienceName}
+                        experienceVenue={experienceMatch.experienceVenue}
+                        experienceLocation={experienceMatch.experienceLocation}
+                        matchName={experienceMatch.matchName}
+                        matchReason={experienceMatch.matchReason}
+                        suggestedDateTime={experienceMatch.suggestedDateTime}
+                        onPlanDate={() => {
+                          console.log('Plan date clicked for experience match')
+                          // TODO: Integrate with date coordination system
+                        }}
+                      />
                     </div>
                   </div>
                 )}
