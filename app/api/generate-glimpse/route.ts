@@ -229,18 +229,19 @@ MATCH: ${matchDescription}
 ${userInterests && userInterests.length > 0 ? `INTERESTS: ${userInterests.join(", ")}` : ""}
 
 **CRITICAL REQUIREMENTS**:
-0. MOST IMPORTANT: Include ALL of Alice's specific physical features (hair style/color, eye shape, facial features, height, build, outfit details) EXACTLY as described. This ensures she looks the same across all glimpses.
-1. The image MUST show them doing the EXACT activity: ${scenario}
-2. Include specific props/equipment that prove it's this activity
-3. Front-load the most important details (subject and location first)
-4. Emphasize atmospheric details (lighting, mood, weather)
-5. Use photographic/cinematic terminology
-6. Aim for 600-700 characters total
+0. MOST CRITICAL: BOTH FACES MUST BE CLEARLY VISIBLE - Use medium shot from chest up, eye level, facing camera. Never crop faces out of frame.
+1. MOST IMPORTANT: Include ALL of Alice's specific physical features (hair style/color, eye shape, facial features, height, build, outfit details) EXACTLY as described. This ensures she looks the same across all glimpses.
+2. The image MUST show them doing the EXACT activity: ${scenario}
+3. Include specific props/equipment that prove it's this activity
+4. Front-load the most important details (subject and location first)
+5. Emphasize atmospheric details (lighting, mood, weather)
+6. Use photographic/cinematic terminology
+7. Aim for 600-700 characters total
 
 STRUCTURE (in this order):
 
 **SUBJECT & LOCATION** (most important - say this first):
-"Photorealistic candid photograph: [exact venue/location for ${scenario}]. 35-year-old Asian woman with shoulder-length dark hair and warm smile, alongside [match description]."
+"Photorealistic candid photograph: [exact venue/location for ${scenario}]. Medium shot showing BOTH FACES CLEARLY VISIBLE from chest up. 35-year-old Asian woman with shoulder-length dark hair and warm smile, alongside [match description], both facing camera at eye level."
 
 **ACTION & PROPS** (prove it's this activity):
 Be specific about what they're doing and what's visible:
@@ -262,7 +263,7 @@ Be specific about what they're doing and what's visible:
 
 EXAMPLES (600-700 chars each):
 
-Bowling: "Photorealistic candid photograph: bustling bowling alley interior. Alice, 35-year-old East Asian woman with straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs, athletic-slender build with toned arms and legs, wearing fitted dark blue jeans and cream long-sleeve top with small 15mm gold hoop earrings, alongside friendly man in his early 30s. Both holding colorful bowling balls, standing at polished wooden lane with pins visible down the lane, wearing bowling shoes. Bright overhead bowling alley lighting with colorful neon accents, late evening atmosphere. Genuine laughter mid-game, making eye contact, other bowlers and glowing scoreboards visible in background. Wide-angle shot, shallow depth of field, natural bokeh, slight motion blur, real skin texture, unposed joyful moment, documentary photography style. Photorealistic, natural film grain."
+Bowling: "Photorealistic candid photograph: bustling bowling alley interior. Medium shot from chest up showing BOTH FACES CLEARLY VISIBLE. Alice, 35-year-old East Asian woman with straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs, athletic-slender build wearing fitted dark blue jeans and cream long-sleeve top with small 15mm gold hoop earrings, alongside friendly man in his early 30s. Both facing camera at eye level, holding colorful bowling balls at waist level, standing at polished wooden lane with pins visible down the lane in background, wearing bowling shoes. Bright overhead bowling alley lighting with colorful neon accents, late evening atmosphere. Genuine laughter mid-game, making eye contact with each other, other bowlers and glowing scoreboards visible behind them. Eye-level shot, shallow depth of field, natural bokeh, real skin texture, unposed joyful moment, documentary photography style. Photorealistic, natural film grain."
 
 Coffee: "Photorealistic candid photograph: cozy artisan coffee shop interior with large windows. Alice, 35-year-old East Asian woman with straight shoulder-length dark brown hair with subtle layers, almond-shaped dark brown eyes, defined cheekbones, warm genuine smile, medium skin tone, athletic-slender build wearing fitted dark jeans and white long-sleeve top with delicate gold necklace, natural makeup, alongside friendly man in his early 30s, sitting across from each other at small wooden table. Both holding steaming ceramic coffee cups, espresso machine and menu board visible in background. Soft morning light streaming through windows, warm golden tones, peaceful Saturday morning atmosphere. Genuine laughter mid-conversation, making eye contact, other customers reading books visible behind them. Wide-angle shot, shallow depth of field, natural bokeh on background, real skin texture, unposed intimate moment, documentary photography style. Photorealistic, natural film grain."
 
@@ -282,7 +283,7 @@ Write ONLY the optimized Grok prompt for "${scenario}" (aim for 600-700 characte
   }
 
   // Fallback if Gemini fails - optimized for xAI Grok
-  return `Photorealistic candid photograph: ${scenario} date setting. Alice, a 35-year-old East Asian woman with straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs (57-59kg), athletic-slender build with toned arms and legs, small-medium frame, wearing fitted dark blue jeans and cream long-sleeve cotton top with small gold hoop earrings (15mm) and delicate gold chain necklace, natural makeup, alongside ${matchDescription}. Both actively enjoying ${scenario}, genuine laughter and connection, making eye contact. Bright natural lighting, warm atmosphere, joyful energy. Wide-angle shot, shallow depth of field, natural bokeh, slight motion blur from movement, real skin texture, unposed candid moment, documentary photography style. Photorealistic, natural film grain, authentic happy moment.`
+  return `Photorealistic candid photograph: ${scenario} date setting. Medium shot from chest up showing BOTH FACES CLEARLY VISIBLE. Alice, a 35-year-old East Asian woman with straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs (57-59kg), athletic-slender build with toned arms and legs, small-medium frame, wearing fitted dark blue jeans and cream long-sleeve cotton top with small gold hoop earrings (15mm) and delicate gold chain necklace, natural makeup, alongside ${matchDescription}. Both facing camera at eye level, actively enjoying ${scenario}, genuine laughter and connection, making eye contact with each other. Bright natural lighting, warm atmosphere, joyful energy. Eye-level shot, shallow depth of field, natural bokeh, slight motion blur from movement, real skin texture, unposed candid moment, documentary photography style. Photorealistic, natural film grain, authentic happy moment.`
 }
 
 function buildVeoPrompt(request: GlimpseGenerationRequest): string {
