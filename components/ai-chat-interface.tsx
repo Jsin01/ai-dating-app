@@ -232,7 +232,7 @@ export function AIChatInterface() {
             await new Promise(resolve => setTimeout(resolve, 2000))
             setMessages(prev => [...prev, {
               role: "ai" as const,
-              content: "hmm having trouble connecting with the other matchmakers right now... wanna try again in a bit?",
+              content: "hmm i talked to everyone but nobody feels like the right fit for this one... maybe try a different experience? or we can chat more so i understand what you're looking for better",
               timestamp: new Date(),
             }])
           }
