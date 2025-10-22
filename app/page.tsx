@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AIChatInterface } from "@/components/ai-chat-interface"
 import { ProfileSettings } from "@/components/profile-settings"
 import { ExperiencesMarketplace } from "@/components/experiences-marketplace"
@@ -9,6 +9,22 @@ import { Sparkles, User, MessageCircle, Ticket, Wifi, Battery } from "lucide-rea
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"chat" | "matches" | "profile" | "experiences">("chat")
+
+  // Listen for experience match request events
+  useEffect(() => {
+    const handleSwitchToEchoTab = (event: Event) => {
+      const customEvent = event as CustomEvent
+      if (customEvent.detail?.reason === 'experience_match') {
+        setActiveTab("chat")
+      }
+    }
+
+    window.addEventListener('switch-to-echo-tab', handleSwitchToEchoTab)
+
+    return () => {
+      window.removeEventListener('switch-to-echo-tab', handleSwitchToEchoTab)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-black flex justify-center">

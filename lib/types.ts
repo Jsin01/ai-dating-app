@@ -119,3 +119,28 @@ export type CalendarEvent = {
   status: "pending" | "confirmed" | "cancelled"
   createdAt: Date
 }
+
+// Experience-Based Matchmaking Types
+
+export type ExperienceMatchRequest = {
+  id: string
+  userId: string // In MVP, always "alice"
+  experienceId: string
+  experienceName: string
+  experienceCategory: string
+  experiencePrice: number
+  experienceDescription: string
+  requestedAt: Date
+  status: "searching" | "match_found" | "no_match" | "expired"
+}
+
+export type ExperienceMatchResult = {
+  requestId: string
+  matchId: string // Which match profile
+  matchName: string
+  matchReason: string // Why this match is perfect for this experience
+  coordinationStory: string // Story of how the AI matchmakers coordinated
+  suggestedDateTime: Date
+  status: "proposed" | "accepted" | "declined"
+  createdAt: Date
+}

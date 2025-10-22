@@ -17,6 +17,8 @@ import {
   MapPin,
   Clock,
   DollarSign,
+  Users,
+  Heart,
 } from "lucide-react"
 
 interface Experience {
@@ -207,6 +209,25 @@ export function ExperiencesMarketplace() {
       setUserXp(userXp - xpUsed)
       setBookedExperiences([...bookedExperiences, experience.id])
     }
+  }
+
+  const handleFindDate = async (experience: Experience) => {
+    // Store the experience request in localStorage for the AI chat to pick up
+    const matchRequest = {
+      experienceId: experience.id,
+      experienceName: experience.title,
+      experienceCategory: experience.category,
+      experiencePrice: experience.price,
+      experienceVenue: experience.venue,
+      experienceLocation: experience.location,
+      experienceDescription: experience.description,
+      requestedAt: new Date().toISOString(),
+    }
+    localStorage.setItem('pending_experience_match_request', JSON.stringify(matchRequest))
+
+    // Switch to Echo tab to show the matchmaking conversation
+    // This will be handled by the main app, triggering a tab change
+    window.dispatchEvent(new CustomEvent('switch-to-echo-tab', { detail: { reason: 'experience_match' } }))
   }
 
   return (
@@ -402,12 +423,22 @@ export function ExperiencesMarketplace() {
                                 </div>
                               </div>
                             )}
-                            <Button
-                              onClick={() => handleBook(experience)}
-                              className="w-full h-11 sm:h-12 rounded-xl font-semibold gradient-rose-blush text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
-                            >
-                              Book for ${finalPrice}
-                            </Button>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                onClick={() => handleFindDate(experience)}
+                                variant="outline"
+                                className="h-11 sm:h-12 rounded-xl font-semibold border-2 border-[var(--rose)] text-[var(--rose)] hover:bg-[var(--rose)]/5 hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
+                              >
+                                <Heart className="w-4 h-4 mr-1.5" />
+                                Find a Date
+                              </Button>
+                              <Button
+                                onClick={() => handleBook(experience)}
+                                className="h-11 sm:h-12 rounded-xl font-semibold gradient-rose-blush text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                              >
+                                ${finalPrice}
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -505,12 +536,22 @@ export function ExperiencesMarketplace() {
                               </div>
                             </div>
                           )}
-                          <Button
-                            onClick={() => handleBook(experience)}
-                            className="w-full h-11 sm:h-12 rounded-xl font-semibold gradient-rose-blush text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
-                          >
-                            Book for ${finalPrice}
-                          </Button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() => handleFindDate(experience)}
+                              variant="outline"
+                              className="h-11 sm:h-12 rounded-xl font-semibold border-2 border-[var(--rose)] text-[var(--rose)] hover:bg-[var(--rose)]/5 hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
+                            >
+                              <Heart className="w-4 h-4 mr-1.5" />
+                              Find a Date
+                            </Button>
+                            <Button
+                              onClick={() => handleBook(experience)}
+                              className="h-11 sm:h-12 rounded-xl font-semibold gradient-rose-blush text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                            >
+                              ${finalPrice}
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
