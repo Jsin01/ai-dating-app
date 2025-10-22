@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { AIChatInterface } from "@/components/ai-chat-interface"
 import { ProfileSettings } from "@/components/profile-settings"
-import { RewardsMarketplace } from "@/components/rewards-marketplace"
+import { ExperiencesMarketplace } from "@/components/experiences-marketplace"
 import { MatchesView } from "@/components/matches-view"
-import { Sparkles, User, MessageCircle, Gift, Wifi, Battery } from "lucide-react"
+import { Sparkles, User, MessageCircle, Ticket, Wifi, Battery } from "lucide-react"
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<"chat" | "matches" | "profile" | "rewards">("chat")
+  const [activeTab, setActiveTab] = useState<"chat" | "matches" | "profile" | "experiences">("chat")
 
   return (
     <div className="min-h-screen bg-black flex justify-center">
@@ -44,7 +44,7 @@ export default function HomePage() {
           {activeTab === "chat" && <AIChatInterface />}
           {activeTab === "matches" && <MatchesView />}
           {activeTab === "profile" && <ProfileSettings />}
-          {activeTab === "rewards" && <RewardsMarketplace />}
+          {activeTab === "experiences" && <ExperiencesMarketplace />}
         </div>
 
         {/* Bottom Tab Navigation */}
@@ -84,20 +84,20 @@ export default function HomePage() {
               </button>
 
               <button
-                onClick={() => setActiveTab("rewards")}
+                onClick={() => setActiveTab("experiences")}
                 className={`flex flex-col items-center gap-1.5 py-2 px-4 rounded-xl transition-all duration-300 ${
-                  activeTab === "rewards" ? "text-[var(--rose)]" : "text-muted-foreground hover:text-foreground"
+                  activeTab === "experiences" ? "text-[var(--rose)]" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <div
-                  className={`relative ${activeTab === "rewards" ? "scale-110" : ""} transition-transform duration-300`}
+                  className={`relative ${activeTab === "experiences" ? "scale-110" : ""} transition-transform duration-300`}
                 >
-                  <Gift className="w-6 h-6" />
-                  {activeTab === "rewards" && (
+                  <Ticket className="w-6 h-6" />
+                  {activeTab === "experiences" && (
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--rose)]" />
                   )}
                 </div>
-                <span className={`text-xs font-medium ${activeTab === "rewards" ? "font-bold" : ""}`}>Rewards</span>
+                <span className={`text-xs font-medium ${activeTab === "experiences" ? "font-bold" : ""}`}>Experiences</span>
               </button>
 
               <button
