@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Glimpse Descriptions</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fef2f2;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #e11d48;
+      margin-bottom: 20px;
+    }
+    button {
+      background: linear-gradient(135deg, #e11d48 0%, #f472b6 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      background: #f3f4f6;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Update Glimpse Descriptions</h1>
+    <p>This will update all existing glimpses to use the new conversational, friend-like tone.</p>
+
+    <button onclick="updateGlimpses()">Update All Glimpses</button>
+    <button onclick="clearAll()">Clear All Data</button>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    function generateConversationalDescription(scenario, matchName) {
+      const name = matchName || "them";
+
+      const descriptions = {
+        "comedy club": `Imagine this: you and ${name}, laughing together at a comedy show. I can totally see this happening...`,
+        "coffee shop": `Picture this: you two at a cozy coffee spot, deep in conversation. The vibe feels right, doesn't it?`,
+        "art gallery": `I'm seeing you and ${name} wandering through an art gallery, vibing on the same pieces. Could be amazing...`,
+        "hiking": `Okay hear me out - you two on a trail, getting to that perfect viewpoint together. Can you see it?`,
+        "cooking together": `What if you and ${name} cooked together? I'm talking laughter, maybe a little flour fight... just saying.`,
+        "live music": `Close your eyes - you and ${name} at a live show, feeling the music together. That's the energy I'm getting.`,
+        "beach sunset": `Sunset beach walk with ${name}? Come on, I'm planting this seed because I think you'd both love it.`,
+        "bookstore": `Bookstore date vibes - you and ${name} sharing recommendations, getting lost in the aisles. Tell me that doesn't sound perfect.`,
+      };
+
+      for (const [key, description] of Object.entries(descriptions)) {
+        if (scenario.toLowerCase().includes(key)) {
+          return description;
+        }
+      }
+
+      return `Just imagine... you and ${name} ${scenario}. I had to show you this vision because I think there's something here.`;
+    }
+
+    function generateConversationalTitle(scenario) {
+      const titles = {
+        "comedy club": "Comedy Night Vibes",
+        "coffee shop": "Coffee & Good Conversation",
+        "art gallery": "Gallery Date Energy",
+        "hiking": "Trail Adventure Together",
+        "cooking together": "Cooking Date Vibes",
+        "live music": "Live Music Night",
+        "beach sunset": "Sunset Beach Walk",
+        "bookstore": "Bookstore Browsing",
+      };
+
+      for (const [key, title] of Object.entries(titles)) {
+        if (scenario.toLowerCase().includes(key)) {
+          return title;
+        }
+      }
+
+      return scenario;
+    }
+
+    function updateGlimpses() {
+      const status = document.getElementById('status');
+
+      try {
+        const saved = localStorage.getItem('glimpses');
+        if (!saved) {
+          status.innerHTML = '<div class="status">No glimpses found in storage.</div>';
+          return;
+        }
+
+        const glimpses = JSON.parse(saved);
+        let updatedCount = 0;
+
+        const updatedGlimpses = glimpses.map(glimpse => {
+          // Update description if it contains "AI-generated preview"
+          if (glimpse.description && glimpse.description.includes('AI-generated preview')) {
+            updatedCount++;
+            return {
+              ...glimpse,
+              title: generateConversationalTitle(glimpse.scenario || ''),
+              description: generateConversationalDescription(
+                glimpse.scenario || '',
+                glimpse.matchName || 'Alex'
+              )
+            };
+          }
+          return glimpse;
+        });
+
+        localStorage.setItem('glimpses', JSON.stringify(updatedGlimpses));
+
+        status.innerHTML = `<div class="status success">
+          ✅ Success! Updated ${updatedCount} glimpse(s) to use conversational tone.<br>
+          <small>Refresh your app to see the changes.</small>
+        </div>`;
+      } catch (error) {
+        status.innerHTML = `<div class="status">Error: ${error.message}</div>`;
+      }
+    }
+
+    function clearAll() {
+      if (confirm('This will clear all messages, glimpses, and XP data. Are you sure?')) {
+        localStorage.clear();
+        document.getElementById('status').innerHTML = '<div class="status success">✅ All data cleared! Refresh your app to start fresh.</div>';
+      }
+    }
+
+    // Auto-show current glimpses
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('glimpses');
+      if (saved) {
+        const glimpses = JSON.parse(saved);
+        const oldCount = glimpses.filter(g => g.description && g.description.includes('AI-generated preview')).length;
+
+        if (oldCount > 0) {
+          document.getElementById('status').innerHTML = `<div class="status">
+            Found ${oldCount} glimpse(s) with old description format. Click "Update All Glimpses" to convert them.
+          </div>`;
+        } else {
+          document.getElementById('status').innerHTML = `<div class="status success">
+            All ${glimpses.length} glimpse(s) are already using the new conversational tone! 🎉
+          </div>`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
