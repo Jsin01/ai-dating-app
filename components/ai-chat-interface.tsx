@@ -228,11 +228,11 @@ export function AIChatInterface() {
 
             console.log('Experience match found:', data.match)
           } else {
-            // Fallback if API fails
+            // Fallback if API fails - proactively ask questions instead of suggesting to chat more
             await new Promise(resolve => setTimeout(resolve, 2000))
             setMessages(prev => [...prev, {
               role: "ai" as const,
-              content: "hmm i talked to everyone but nobody feels like the right fit for this one... maybe try a different experience? or we can chat more so i understand what you're looking for better",
+              content: "hmm i talked to everyone but nobody feels like the right fit for this one... what are you hoping to get out of this experience? like is it more about trying something new or connecting with someone who shares this interest?",
               timestamp: new Date(),
             }])
           }
