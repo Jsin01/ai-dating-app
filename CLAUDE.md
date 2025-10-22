@@ -18,38 +18,53 @@ This is "Glimpse" - an AI-powered dating app that uses **friend-of-friend introd
 
 ## Development Commands
 
-```bash
-# Development
-npm run dev          # Start dev server (usually runs on localhost:3001)
-rm -rf .next && npm run dev  # Clear Next.js cache and restart (if hot reload fails)
+**Package Manager**: This project uses **Bun** (not npm). Always use Bun for maximum performance.
 
-# Building
-npm run build        # Build for production
-npm start            # Run production server
+```bash
+# Development (runs on port 3001 by default)
+bun run dev
+PORT=3001 bun run dev  # Explicit port
+
+# Production build
+bun run build
+bun start
 
 # Linting
-npm run lint         # Run ESLint
+bun run lint
+
+# Install dependencies
+bun install
+
+# Add new package
+bun add <package>
 
 # Testing
+node test-veo.mjs    # Test Veo 3.1 → xAI Grok fallback
+node test-xai.mjs    # Test xAI Grok image generation directly
+node test-image-fallback.mjs  # Test glimpse image fallback system
 node test-chat-improvements.mjs  # Test chat UX with automated conversation
-node test-veo.mjs    # Test Veo 3.1 API integration
 node test-date-coordination-simple.mjs  # Test date proposal APIs
 node test-date-proposal-ui.mjs          # Test date proposal UI rendering
+node screenshot-glimpse.mjs     # Screenshot glimpse UI
+node screenshot-image-glimpse.mjs  # Screenshot image glimpse
+node screenshot-profile.mjs     # Screenshot profile page
 npx playwright screenshot --device="iPhone 14 Pro" http://localhost:3001 <output.png>  # Mobile screenshot
 ```
 
 ## Architecture
 
 ### Tech Stack
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16.0.0 (App Router with Turbopack)
+- **Runtime**: Bun 1.3.0 (development runtime - much faster than Node.js)
 - **UI**: React 19, Tailwind CSS v4 (with oklch color system)
 - **Components**: Radix UI primitives with shadcn/ui patterns
 - **Forms**: React Hook Form + Zod validation
 - **Styling**: Tailwind CSS v4 with custom CSS variables, tw-animate-css
 - **AI Integration**:
   - Google Gemini 2.5 Flash Lite (`gemini-2.5-flash-lite-preview-09-2025`) (conversational AI)
-  - Google Veo 3.1 (`veo-3.1-generate-preview`) for video generation with natively generated audio
-  - Single API key for both: `NEXT_PUBLIC_GEMINI_API_KEY`
+  - Google Veo 3.1 (`veo-3.1-generate-preview`) for video generation (primary)
+  - xAI Grok (`grok-2-image-1212`) for static image fallback when video fails
+  - API Keys: `NEXT_PUBLIC_GEMINI_API_KEY` (Gemini), `XAI_API_KEY` (xAI)
 - **Identity Verification**: Stripe Identity for ID scanning and verification
 - **State**: localStorage + in-memory stores (production would use database)
 - **Mobile-First**: Entire app constrained to max-width 430px (iPhone size) with black background for clear iPhone outline
@@ -129,16 +144,19 @@ The app uses a sophisticated three-layer AI architecture where ALL conversation 
   - 2 messages: "omg Marcus would be perfect" → "let me show you"
   - 4 messages: thinking → sharing detail → building anticipation → final reveal
 
-**Layer 3: Video Generation** (`/app/api/generate-glimpse/route.ts`)
-- **Model**: Veo 3.1 (`veo-3.1-generate-preview`)
-- **Purpose**: Generate 8-second cinematic date preview with audio
+**Layer 3: Visual Generation** (`/app/api/generate-glimpse/route.ts`)
+- **Primary**: Veo 3.1 (`veo-3.1-generate-preview`) for video
+- **Fallback**: xAI Grok (`grok-2-image-1212`) for static images when video fails
+- **Purpose**: Generate cinematic date previews (video preferred, image fallback)
 - **Flow**:
-  1. Build detailed prompt (scene description + audio cues)
-  2. Call `generateVideos()` API
-  3. Poll operation status every 10 seconds
-  4. Download video with authenticated fetch
-  5. Save to `public/glimpses/` and return metadata
-  6. Gemini generates dynamic description for the glimpse
+  1. Build detailed Veo prompt (scene description + audio cues)
+  2. Try Veo 3.1: Call `generateVideos()` API
+  3. If Veo succeeds: Poll operation, download video, save to `public/glimpses/`
+  4. If Veo fails: Fall back to xAI Grok image generation
+  5. Build Grok-optimized prompt (600-700 chars, photorealistic, atmospheric)
+  6. Generate static image via xAI API
+  7. Download and save image to `public/glimpses/`
+  8. Gemini generates dynamic title and description for the glimpse
 
 **User Profile RAG System** (`lib/user-profile.ts`)
 - Simple RAG that learns about Alice through conversation
@@ -313,7 +331,11 @@ The entire app is constrained within a mobile container with black background fo
 ### Environment Variables
 Required for full functionality:
 ```bash
-NEXT_PUBLIC_GEMINI_API_KEY=your-key-here  # Veo 3.1 API access via Google Gemini
+# Google Gemini (for Veo 3.1 video generation and AI chat)
+NEXT_PUBLIC_GEMINI_API_KEY=your-key-here
+
+# xAI Grok (for image fallback when video generation fails)
+XAI_API_KEY=your-key-here
 
 # Stripe Identity (for profile verification)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
@@ -321,6 +343,7 @@ STRIPE_SECRET_KEY=sk_test_...
 ```
 
 Get Gemini API key from: https://aistudio.google.com/apikey
+Get xAI API key from: https://x.ai/api
 Get Stripe keys from: https://dashboard.stripe.com/test/apikeys
 
 Optional (for production):
