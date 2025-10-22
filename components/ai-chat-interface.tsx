@@ -144,43 +144,73 @@ export function AIChatInterface() {
           // Clear the flag immediately to prevent duplicate processing
           localStorage.removeItem('pending_experience_match_request')
 
+          // Get user context for matchmaking
+          const userRAG = getUserRAG()
+          const userContext = userRAG.getContextSummary()
+
           // Show AI typing indicator
           setIsTyping(true)
 
-          // Add initial message from AI
-          await new Promise(resolve => setTimeout(resolve, 800))
+          // Message 1: Initial excitement and starting coordination
+          await new Promise(resolve => setTimeout(resolve, 1200))
           setMessages(prev => [...prev, {
             role: "ai" as const,
-            content: `ooh love that you want to do ${experienceData.experienceName}! let me reach out to the other matchmakers...`,
+            content: `ooh love that you want to do ${experienceData.experienceName}! give me a sec, let me reach out to the other matchmakers on the platform...`,
             timestamp: new Date(),
           }])
 
-          // Call the experience match API
-          const response = await fetch('/api/experience-match', {
+          // Message 2: Starting to ask around (simulate coordination beginning)
+          await new Promise(resolve => setTimeout(resolve, 2500))
+          setMessages(prev => [...prev, {
+            role: "ai" as const,
+            content: `okay so i'm chatting with a few matchmakers right now... asking about their clients and who might vibe with this`,
+            timestamp: new Date(),
+          }])
+
+          // Start API call in background while showing progress messages
+          const matchPromise = fetch('/api/experience-match', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(experienceData)
           })
 
+          // Message 3: Getting responses back
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          setMessages(prev => [...prev, {
+            role: "ai" as const,
+            content: `hearing back from some of them... they're telling me about their people and what they're into`,
+            timestamp: new Date(),
+          }])
+
+          // Message 4: Narrowing down options
+          await new Promise(resolve => setTimeout(resolve, 2500))
+          setMessages(prev => [...prev, {
+            role: "ai" as const,
+            content: `okay getting some good options here... let me ask a few more questions about compatibility`,
+            timestamp: new Date(),
+          }])
+
+          // Wait for API to complete
+          const response = await matchPromise
           const data = await response.json()
 
           if (data.success && data.match) {
-            // Add AI message with coordination story
-            await new Promise(resolve => setTimeout(resolve, 1200))
+            // Message 5: Found someone! Share the coordination story
+            await new Promise(resolve => setTimeout(resolve, 2000))
             setMessages(prev => [...prev, {
               role: "ai" as const,
               content: data.match.coordinationStory,
               timestamp: new Date(),
             }])
 
-            // Add final message with match details
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            // Message 6: Final recommendation with reasoning
+            await new Promise(resolve => setTimeout(resolve, 1800))
             let finalMessageIndex = 0
             setMessages(prev => {
               finalMessageIndex = prev.length
               return [...prev, {
                 role: "ai" as const,
-                content: `${data.match.matchName} would be perfect! ${data.match.matchReason}`,
+                content: `so after chatting with everyone, i think ${data.match.matchName} would be perfect! ${data.match.matchReason}`,
                 timestamp: new Date(),
               }]
             })
@@ -199,7 +229,7 @@ export function AIChatInterface() {
             console.log('Experience match found:', data.match)
           } else {
             // Fallback if API fails
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            await new Promise(resolve => setTimeout(resolve, 2000))
             setMessages(prev => [...prev, {
               role: "ai" as const,
               content: "hmm having trouble connecting with the other matchmakers right now... wanna try again in a bit?",
