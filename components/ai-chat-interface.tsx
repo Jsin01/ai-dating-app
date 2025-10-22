@@ -645,18 +645,39 @@ export function AIChatInterface() {
             }
           }
 
-          // Generate glimpse if:
-          // 1. Scenario detected (activity/location extracted)
-          // 2. Enough conversation happened (10+ messages for context)
-          // 3. 60% chance to keep it feeling special but not too rare
-          const shouldGenerateGlimpse =
-            detectedScenario &&
-            messages.length >= 10 &&
-            Math.random() < 0.6
+          // Check if AI is PROMISING to create a glimpse
+          const aiPromisesGlimpse = /(?:pulling up|creating|working on|getting|trying to create|visualiz|show you|picture this|imagine|scene|vibes for)/i.test(data.message)
 
-          if (shouldGenerateGlimpse) {
+          // Generate glimpse if:
+          // CASE 1: User mentioned scenario AND we have enough context
+          // OR
+          // CASE 2: AI is promising to create/show something
+          let scenarioToGenerate = null
+
+          if (aiPromisesGlimpse && messages.length >= 10) {
+            // AI promised a glimpse - extract scenario from AI's message or recent conversation
+            scenarioToGenerate = detectDateScenario(data.message)
+            if (!scenarioToGenerate) {
+              // Look back in recent messages for the scenario
+              for (let i = messages.length - 1; i >= Math.max(0, messages.length - 5); i--) {
+                const msg = messages[i]
+                const foundScenario = detectDateScenario(msg.content)
+                if (foundScenario) {
+                  scenarioToGenerate = foundScenario
+                  break
+                }
+              }
+            }
+            console.log('AI promised glimpse, extracted scenario:', scenarioToGenerate)
+          } else if (detectedScenario && messages.length >= 10 && Math.random() < 0.6) {
+            // User mentioned scenario - 60% chance to create glimpse
+            scenarioToGenerate = detectedScenario
+            console.log('User mentioned scenario:', scenarioToGenerate)
+          }
+
+          if (scenarioToGenerate) {
             setTimeout(() => {
-              generateGlimpse(detectedScenario)
+              generateGlimpse(scenarioToGenerate)
             }, 1000)
           }
 
