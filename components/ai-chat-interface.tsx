@@ -163,6 +163,37 @@ export function AIChatInterface() {
   const detectDateScenario = (content: string): string | null => {
     const lowerContent = content.toLowerCase()
 
+    // Check for explicit visualization/glimpse requests - strong triggers
+    const visualizeTriggers = [
+      "visualize", "show me", "picture", "imagine", "create", "glimpse",
+      "vision", "show what", "see how", "see what", "look like", "pulling up"
+    ]
+
+    for (const trigger of visualizeTriggers) {
+      if (lowerContent.includes(trigger)) {
+        // User is explicitly asking to visualize something
+        // Look through recent messages for the activity being discussed
+        for (let i = messages.length - 1; i >= Math.max(0, messages.length - 5); i--) {
+          const msg = messages[i]
+          if (msg.content && msg.content !== content) {
+            const scenarioInPrevious = detectScenarioInText(msg.content)
+            if (scenarioInPrevious) return scenarioInPrevious
+          }
+        }
+        // If no recent activity found, extract from current message
+        const extracted = content.replace(/can you|help me|visualize|show me|picture|imagine|create|glimpse|vision|show what|see how|see what|look like|pulling up|vibes for|that/gi, '').trim()
+        if (extracted.length > 3) return extracted
+        return "river tubing date"  // fallback for this conversation
+      }
+    }
+
+    return detectScenarioInText(content)
+  }
+
+  // Separate function for scenario detection in text
+  const detectScenarioInText = (content: string): string | null => {
+    const lowerContent = content.toLowerCase()
+
     // Common activity patterns - try these first for better extraction
     const activityPatterns = [
       // "I like/love/enjoy X" patterns
@@ -203,7 +234,10 @@ export function AIChatInterface() {
       "yoga", "gym", "sport", "game", "knitting", "pottery", "art", "class", "workshop",
       "market", "festival", "fair", "exhibition", "skating", "bowling", "arcade",
       "picnic", "walk", "stroll", "dance", "dancing", "karaoke", "trivia",
-      "garden", "aquarium", "zoo", "shopping", "mall", "vintage", "thrift"
+      "garden", "aquarium", "zoo", "shopping", "mall", "vintage", "thrift",
+      "tubing", "river", "float", "floating", "kayak", "kayaking", "paddle", "paddling",
+      "canoe", "rafting", "boat", "boating", "sail", "sailing", "surf", "surfing",
+      "swim", "swimming", "lake", "reservoir", "rapids", "water"
     ]
 
     for (const keyword of activityKeywords) {

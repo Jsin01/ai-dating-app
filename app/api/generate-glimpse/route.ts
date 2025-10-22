@@ -11,9 +11,10 @@ const client = new GoogleGenAI({
   apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
 })
 
-// Initialize OpenAI client for image fallback
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Initialize xAI client for image fallback
+const xai = new OpenAI({
+  apiKey: process.env.XAI_API_KEY,
+  baseURL: "https://api.x.ai/v1",
 })
 
 export async function POST(request: NextRequest) {
@@ -101,25 +102,23 @@ export async function POST(request: NextRequest) {
       console.log("Video generation failed, falling back to image generation...")
       console.error("Video error:", videoError)
 
-      // Fallback to DALL-E 3 for image generation
+      // Fallback to xAI Grok for image generation
       const imagePrompt = await buildImagePrompt(body)
       generatedPrompt = imagePrompt
-      console.log("Generating image with DALL-E 3...")
+      console.log("Generating image with xAI Grok...")
       console.log("Image prompt:", imagePrompt)
 
-      const response = await openai.images.generate({
-        model: "dall-e-3",
+      const response = await xai.images.generate({
+        model: "grok-2-image-1212",
         prompt: imagePrompt,
         n: 1,
-        size: "1792x1024", // 16:9 aspect ratio
-        quality: "hd",
       })
 
-      console.log("DALL-E 3 response received")
+      console.log("xAI Grok response received")
 
       const imageUrl = response.data[0]?.url
       if (!imageUrl) {
-        throw new Error("No image URL in DALL-E response")
+        throw new Error("No image URL in xAI response")
       }
 
       console.log("Image URL:", imageUrl)
@@ -144,13 +143,16 @@ export async function POST(request: NextRequest) {
       isVideo = false
     }
 
-    // Generate AI description using Gemini
-    const description = await generateDescription({ scenario, matchName, userContext, userInterests })
+    // Generate AI description and title using Gemini
+    const [description, title] = await Promise.all([
+      generateDescription({ scenario, matchName, userContext, userInterests }),
+      generateTitle(scenario, matchName)
+    ])
 
     // Create the glimpse object
     glimpse = {
       id: glimpseId,
-      title: generateTitle(scenario),
+      title,
       description,
       prompt: generatedPrompt,
       videoUrl: isVideo ? mediaUrl : undefined,
@@ -197,10 +199,11 @@ async function buildImagePrompt(request: GlimpseGenerationRequest): Promise<stri
   const { scenario, userInterests, matchAppearance, matchName } = request
 
   // User persona - Alice, 35-year-old Asian woman from Los Angeles
-  const userDescription = `a 35-year-old Asian woman with shoulder-length dark hair, warm smile, casual-elegant style`
+  // VERY DETAILED description to ensure consistency across all glimpses
+  const userDescription = `Alice, a 35-year-old East Asian woman with these specific physical features: straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs (57-59kg), athletic-slender build with toned arms and legs, small-medium frame. She's wearing casual-chic LA style: fitted dark blue jeans (skinny or slim-fit), a cream or white long-sleeve cotton top (slightly fitted), minimal gold jewelry (small 15mm hoop earrings, delicate gold chain necklace), natural makeup with subtle brown eyeliner and nude-pink lipstick. Her expression is confident, warm, and genuinely happy with relaxed posture`
 
   // Match description - use provided appearance or fallback
-  const matchDescription = matchAppearance || `a man`
+  const matchDescription = matchAppearance || `a friendly man in his early 30s with casual style`
 
   // Use Gemini to generate a photorealistic image prompt
   try {
@@ -209,47 +212,63 @@ async function buildImagePrompt(request: GlimpseGenerationRequest): Promise<stri
       contents: [{
         role: 'user',
         parts: [{
-          text: `You are an expert at writing optimized DALL-E 3 prompts for photorealistic candid photographs.
+          text: `You are an expert at writing optimized image prompts for xAI Grok's Aurora model (grok-2-image-1212).
 
-Create a DALL-E 3 prompt for this dating scenario:
+CRITICAL KNOWLEDGE ABOUT GROK:
+- Grok EXCELS at photorealistic images and following detailed prompts
+- Grok responds VERY WELL to atmospheric details (lighting, mood, weather, time of day)
+- Grok loves cinematic/photographic language: "bokeh", "wide-angle", "golden hour", "soft morning light"
+- Optimal prompt length: 600-700 characters with clear focus
+- Grok's chat model will revise your prompt for clarity before image generation
+
+Create an xAI Grok image prompt for this dating scenario:
 
 SCENARIO: ${scenario}
-ALICE: ${userDescription}
+ALICE (THE USER - MUST LOOK EXACTLY THE SAME IN EVERY GLIMPSE): ${userDescription}
 MATCH: ${matchDescription}
 ${userInterests && userInterests.length > 0 ? `INTERESTS: ${userInterests.join(", ")}` : ""}
 
-STRUCTURE YOUR PROMPT IN THIS EXACT ORDER:
+**CRITICAL REQUIREMENTS**:
+0. MOST IMPORTANT: Include ALL of Alice's specific physical features (hair style/color, eye shape, facial features, height, build, outfit details) EXACTLY as described. This ensures she looks the same across all glimpses.
+1. The image MUST show them doing the EXACT activity: ${scenario}
+2. Include specific props/equipment that prove it's this activity
+3. Front-load the most important details (subject and location first)
+4. Emphasize atmospheric details (lighting, mood, weather)
+5. Use photographic/cinematic terminology
+6. Aim for 600-700 characters total
 
-1. **START WITH KEY SUBJECT** (front-load most important):
-   "Candid iPhone photograph: 35-year-old Asian woman with shoulder-length dark hair, warm smile, and [match description] ${scenario}"
+STRUCTURE (in this order):
 
-2. **LIGHTING & ATMOSPHERE** (critical for quality):
-   - ALWAYS include: "bright natural daylight" OR "warm golden hour light" OR "well-lit interior"
-   - Add mood: "joyful atmosphere, genuine happiness"
+**SUBJECT & LOCATION** (most important - say this first):
+"Photorealistic candid photograph: [exact venue/location for ${scenario}]. 35-year-old Asian woman with shoulder-length dark hair and warm smile, alongside [match description]."
 
-3. **SPECIFIC DETAILS** (comma-separated):
-   - Exact activity/pose: "mid-laugh", "making eye contact", "reaching for [object]"
-   - Location specifics: venue type, environmental details
-   - Background: "bustling background with other people"
+**ACTION & PROPS** (prove it's this activity):
+Be specific about what they're doing and what's visible:
+- Bowling → "both holding colorful bowling balls, standing at polished lane with pins visible, wearing bowling shoes"
+- Coffee → "sitting at small wooden table, steaming coffee cups in hands, espresso machine visible in background"
+- Tubing → "sitting in bright inner tubes on river water, wearing life vests, paddles in hands, water splashing"
+- Hiking → "walking mountain trail, wearing backpacks, hiking boots visible, trail markers in background"
 
-4. **PHOTOGRAPHIC STYLE** (establish realism):
-   "Shallow depth of field, natural bokeh, slight motion blur, real skin texture, unposed candid moment, documentary photography style"
+**ATMOSPHERE & LIGHTING** (Grok's strength - be detailed):
+- Time of day: "soft morning light" / "golden hour sunset" / "bright midday sun"
+- Weather/mood: "warm autumn day" / "crisp winter air" / "gentle breeze" / "misty morning"
+- Emotional energy: "joyful laughter" / "peaceful contentment" / "playful energy"
 
-5. **QUALITY DESCRIPTORS** (end strong):
-   "Photorealistic, natural grain, authentic moment, 16:9 aspect ratio"
+**PHOTOGRAPHIC STYLE** (cinematic language):
+"Wide-angle shot, shallow depth of field, natural bokeh, slight motion blur from movement, unposed candid moment, real skin texture, documentary photography style"
 
-CRITICAL RULES:
-- Use ONLY positive descriptions (what you want, never "NOT this")
-- Front-load Alice's description (35-year-old Asian woman with shoulder-length dark hair)
-- Specify "bright" or "well-lit" EARLY in the prompt
-- Use photography terminology: candid, bokeh, shallow DOF, golden hour
-- Keep total prompt under 300 characters if possible
-- Comma-separate distinct elements
+**QUALITY** (end strong):
+"Photorealistic, natural film grain, authentic happy moment"
 
-EXAMPLE GOOD PROMPT:
-"Candid iPhone photograph: 35-year-old Asian woman with shoulder-length dark hair and friendly 32-year-old man playing darts in cozy pub, bright warm lighting, genuine laughter mid-game, making eye contact, busy background with other patrons, shallow depth of field with natural bokeh, slight motion blur from movement, real skin texture, unposed joyful moment, documentary photography style, photorealistic, natural grain, 16:9"
+EXAMPLES (600-700 chars each):
 
-Write ONLY the optimized prompt:`
+Bowling: "Photorealistic candid photograph: bustling bowling alley interior. Alice, 35-year-old East Asian woman with straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs, athletic-slender build with toned arms and legs, wearing fitted dark blue jeans and cream long-sleeve top with small 15mm gold hoop earrings, alongside friendly man in his early 30s. Both holding colorful bowling balls, standing at polished wooden lane with pins visible down the lane, wearing bowling shoes. Bright overhead bowling alley lighting with colorful neon accents, late evening atmosphere. Genuine laughter mid-game, making eye contact, other bowlers and glowing scoreboards visible in background. Wide-angle shot, shallow depth of field, natural bokeh, slight motion blur, real skin texture, unposed joyful moment, documentary photography style. Photorealistic, natural film grain."
+
+Coffee: "Photorealistic candid photograph: cozy artisan coffee shop interior with large windows. Alice, 35-year-old East Asian woman with straight shoulder-length dark brown hair with subtle layers, almond-shaped dark brown eyes, defined cheekbones, warm genuine smile, medium skin tone, athletic-slender build wearing fitted dark jeans and white long-sleeve top with delicate gold necklace, natural makeup, alongside friendly man in his early 30s, sitting across from each other at small wooden table. Both holding steaming ceramic coffee cups, espresso machine and menu board visible in background. Soft morning light streaming through windows, warm golden tones, peaceful Saturday morning atmosphere. Genuine laughter mid-conversation, making eye contact, other customers reading books visible behind them. Wide-angle shot, shallow depth of field, natural bokeh on background, real skin texture, unposed intimate moment, documentary photography style. Photorealistic, natural film grain."
+
+River tubing: "Photorealistic candid photograph: calm river surrounded by trees. Alice, 35-year-old East Asian woman with straight shoulder-length dark brown hair, almond-shaped dark brown eyes, defined cheekbones, warm smile, medium skin tone, athletic-slender build wearing fitted jeans and cream top under orange life vest, alongside friendly man in his early 30s, sitting in bright colored inner tubes floating on clear river water. Both wearing orange life vests, holding wooden paddles, water splashing and creating ripples around tubes. Golden hour sunlight reflecting off water surface, warm summer afternoon, gentle breeze. Trees along riverbank visible, genuine laughter and joy, making eye contact, water droplets suspended in air catching sunlight. Wide-angle shot, shallow depth of field, slight motion blur from water movement, real skin texture, candid adventure moment, documentary photography style. Photorealistic, natural film grain."
+
+Write ONLY the optimized Grok prompt for "${scenario}" (aim for 600-700 characters):`
         }]
       }]
     })
@@ -262,18 +281,19 @@ Write ONLY the optimized prompt:`
     console.error("Error generating image prompt with Gemini:", error)
   }
 
-  // Fallback if Gemini fails - optimized for DALL-E 3
-  return `Candid iPhone photograph: 35-year-old Asian woman with shoulder-length dark hair, warm smile, and ${matchDescription} ${scenario}, bright natural daylight, joyful atmosphere, genuine laughter mid-moment, making eye contact, bustling background with other people, shallow depth of field with natural bokeh, slight motion blur from movement, real skin texture, unposed candid moment, documentary photography style, photorealistic, natural grain, authentic happy moment, 16:9 aspect ratio`
+  // Fallback if Gemini fails - optimized for xAI Grok
+  return `Photorealistic candid photograph: ${scenario} date setting. Alice, a 35-year-old East Asian woman with straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs (57-59kg), athletic-slender build with toned arms and legs, small-medium frame, wearing fitted dark blue jeans and cream long-sleeve cotton top with small gold hoop earrings (15mm) and delicate gold chain necklace, natural makeup, alongside ${matchDescription}. Both actively enjoying ${scenario}, genuine laughter and connection, making eye contact. Bright natural lighting, warm atmosphere, joyful energy. Wide-angle shot, shallow depth of field, natural bokeh, slight motion blur from movement, real skin texture, unposed candid moment, documentary photography style. Photorealistic, natural film grain, authentic happy moment.`
 }
 
 function buildVeoPrompt(request: GlimpseGenerationRequest): string {
   const { scenario, userInterests, matchAppearance } = request
 
   // User persona - Alice, 35-year-old Asian woman from Los Angeles
-  const userDescription = `a 35-year-old Asian woman with shoulder-length dark hair, warm smile, casual-elegant style`
+  // VERY DETAILED description to ensure consistency across all glimpses
+  const userDescription = `Alice, a 35-year-old East Asian woman with these specific physical features: straight shoulder-length dark brown hair (reaches mid-shoulder blade) with subtle face-framing layers, almond-shaped dark brown eyes with double eyelids, defined cheekbones with soft oval face shape, warm genuine smile showing white teeth, light-medium warm-toned skin (MAC NC25-30 range), 5'5" (165cm) tall, 125-130 lbs (57-59kg), athletic-slender build with toned arms and legs, small-medium frame, wearing casual-chic LA style (fitted dark blue jeans, cream or white long-sleeve cotton top, minimal gold jewelry - small 15mm hoop earrings and delicate gold chain necklace), natural makeup with subtle brown eyeliner and nude-pink lipstick, confident and genuinely happy expression with relaxed posture`
 
   // Match description - use provided appearance or fallback
-  const matchDescription = matchAppearance || `a man`
+  const matchDescription = matchAppearance || `a friendly man in his early 30s with casual style`
 
   let prompt = `Cinematic first-person POV video with natively generated audio: `
 
@@ -307,26 +327,49 @@ function buildVeoPrompt(request: GlimpseGenerationRequest): string {
   return prompt
 }
 
-function generateTitle(scenario: string): string {
-  const titles: Record<string, string> = {
-    "comedy club": "Comedy Night Vibes",
-    "coffee shop": "Coffee & Good Conversation",
-    "art gallery": "Gallery Date Energy",
-    hiking: "Trail Adventure Together",
-    "cooking together": "Cooking Date Vibes",
-    "live music": "Live Music Night",
-    "beach sunset": "Sunset Beach Walk",
-    bookstore: "Bookstore Browsing",
+async function generateTitle(scenario: string, matchName?: string): Promise<string> {
+  try {
+    // Use Gemini to generate a catchy, contextual title
+    const result = await client.models.generateContent({
+      model: "gemini-2.5-flash-lite-preview-09-2025",
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `Generate a short, catchy title for a dating glimpse (AI-generated preview of a date).
+
+Scenario: ${scenario}
+${matchName ? `Match: ${matchName}` : ''}
+
+Requirements:
+- Keep it VERY SHORT: 2-4 words max
+- Make it exciting and fun (this is a dating app!)
+- Capture the vibe/energy of the activity
+- Use casual, modern language
+- No emojis
+
+Examples of good titles:
+- "Comedy Night Vibes"
+- "Coffee & Good Conversation"
+- "Trail Adventure Together"
+- "River Tubing Adventure"
+- "Live Music Night"
+- "Sunset Beach Walk"
+- "Bowling Date Energy"
+
+Write ONLY the title (no quotes, no explanation):`
+        }]
+      }]
+    })
+
+    const generatedTitle = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+    if (generatedTitle) {
+      return generatedTitle.replace(/['"]/g, '') // Remove any quotes
+    }
+  } catch (error) {
+    console.error("Error generating title with Gemini:", error)
   }
 
-  const key = Object.keys(titles).find((key) => scenario.toLowerCase().includes(key))
-
-  if (key) {
-    return titles[key]
-  }
-
-  // Dynamic title generation for any scenario
-  // Capitalize first letter of each word
+  // Fallback: Simple title case of scenario
   const titleCase = scenario
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
