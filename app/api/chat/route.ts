@@ -200,19 +200,18 @@ description: A relaxing friday night flow session - perfect way to unwind togeth
 just sent that over! check it out and let me know what you think
 
 **EXACT FORMAT TO USE**:
-```
+
 [CREATE_DATE]
-matchId: [match ID from list below]
-matchName: [their name]
-activity: [the specific activity discussed]
-venue: [actual venue name in LA]
-location: [real LA address]
-dateTime: [ISO 8601 format, within 1-2 weeks]
-description: [1 sentence about why this date is perfect]
+matchId: (match ID from list below)
+matchName: (their name)
+activity: (the specific activity discussed)
+venue: (actual venue name in LA)
+location: (real LA address)
+dateTime: (ISO 8601 format, within 1-2 weeks)
+description: (1 sentence about why this date is perfect)
 [/CREATE_DATE]
 
-[short message: "just sent that over! let me know what you think"]
-```
+(short message: "just sent that over! let me know what you think")
 
 **Match IDs**:
 - Marcus = match_1
