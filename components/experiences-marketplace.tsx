@@ -342,16 +342,16 @@ export function ExperiencesMarketplace() {
                           alt={experience.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                         />
-                        {/* Gradient overlay for better text contrast */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                        {/* Enhanced gradient overlay for better text contrast */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
 
                         <div className="absolute top-3 right-3 flex flex-col gap-2">
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-white font-bold text-sm shadow-lg">
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/90 backdrop-blur-md text-white font-bold text-sm shadow-lg">
                             <DollarSign className="w-3.5 h-3.5" />
                             <span>{experience.price}</span>
                           </div>
                           {discount > 0 && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--rose)] backdrop-blur-md text-white font-bold text-xs shadow-lg animate-pulse-subtle">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--rose)] backdrop-blur-md text-white font-bold text-xs shadow-lg shadow-[var(--rose)]/50 animate-pulse-subtle">
                               <Star className="w-3 h-3 fill-current" />
                               <span>${discount} off</span>
                             </div>
@@ -445,16 +445,16 @@ export function ExperiencesMarketplace() {
                         alt={experience.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
-                      {/* Gradient overlay for better text contrast */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                      {/* Enhanced gradient overlay for better text contrast */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
 
                       <div className="absolute top-3 right-3 flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-white font-bold text-sm shadow-lg">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/90 backdrop-blur-md text-white font-bold text-sm shadow-lg">
                           <DollarSign className="w-3.5 h-3.5" />
                           <span>{experience.price}</span>
                         </div>
                         {discount > 0 && (
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--rose)] backdrop-blur-md text-white font-bold text-xs shadow-lg animate-pulse-subtle">
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--rose)] backdrop-blur-md text-white font-bold text-xs shadow-lg shadow-[var(--rose)]/50 animate-pulse-subtle">
                             <Star className="w-3 h-3 fill-current" />
                             <span>${discount} off</span>
                           </div>
